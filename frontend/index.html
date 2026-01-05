@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DemoApp - MakeRAG Clone</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        
+        .auth-container {
+            display: flex;
+        }
+        
+        .auth-form {
+            width: 100%;
+            padding: 40px;
+            display: none;
+        }
+        
+        .auth-form.active {
+            display: block;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 28px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            color: #555;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .toggle-form {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .toggle-form a {
+            color: #667eea;
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .toggle-form a:hover {
+            text-decoration: underline;
+        }
+        
+        .success-message {
+            color: #27ae60;
+            padding: 10px;
+            background: #d5f4e6;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            padding: 10px;
+            background: #fadbd8;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .dashboard {
+            display: none;
+            padding: 40px;
+            background: white;
+        }
+        
+        .dashboard.active {
+            display: block;
+        }
+        
+        .dashboard-header {
+            margin-bottom: 30px;
+        }
+        
+        .user-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .logout-btn {
+            background: #e74c3c;
+            width: auto;
+            padding: 10px 20px;
+        }
+        
+        .logout-btn:hover {
+            background: #c0392b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="auth-container">
+            <!-- Login Form -->
+            <div class="auth-form active" id="loginForm">
+                <h1>Welcome Back</h1>
+                <form onsubmit="handleLogin(event)">
+                    <div id="loginError"></div>
+                    <div class="form-group">
+                        <label for="loginEmail">Email</label>
+                        <input type="email" id="loginEmail" required placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" required placeholder="Password">
+                    </div>
+                    <button type="submit">Sign In</button>
+                    <div class="toggle-form">
+                        Don't have an account? <a onclick="toggleForms()">Sign Up</a>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Signup Form -->
+            <div class="auth-form" id="signupForm">
+                <h1>Create Account</h1>
+                <form onsubmit="handleSignup(event)">
+                    <div id="signupError"></div>
+                    <div class="form-group">
+                        <label for="signupName">Full Name</label>
+                        <input type="text" id="signupName" required placeholder="John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label for="signupEmail">Email</label>
+                        <input type="email" id="signupEmail" required placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPassword">Password</label>
+                        <input type="password" id="signupPassword" required placeholder="Password">
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password</label>
+                        <input type="password" id="confirmPassword" required placeholder="Confirm Password">
+                    </div>
+                    <button type="submit">Sign Up</button>
+                    <div class="toggle-form">
+                        Already have an account? <a onclick="toggleForms()">Sign In</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Dashboard -->
+        <div class="dashboard" id="dashboard">
+            <div class="dashboard-header">
+                <h1>Welcome to DemoApp</h1>
+                <div class="user-info">
+                    <p><strong>Email:</strong> <span id="userEmail"></span></p>
+                    <p><strong>Name:</strong> <span id="userName"></span></p>
+                </div>
+                <button class="logout-btn" onclick="handleLogout()">Logout</button>
+            </div>
+            <div>
+                <h2>Features Available:</h2>
+                <ul style="padding: 20px; line-height: 1.8;">
+                    <li>✓ Secure Authentication</li>
+                    <li>✓ Chat Interface</li>
+                    <li>✓ Document Upload</li>
+                    <li>✓ RAG Search</li>
+                    <li>✓ Real-time Updates</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = 'https://makerag-clone.onrender.com/api';
+        
+        // Toggle between login and signup
+        function toggleForms() {
+            const loginForm = document.getElementById('loginForm');
+            const signupForm = document.getElementById('signupForm');
+            loginForm.classList.toggle('active');
+            signupForm.classList.toggle('active');
+        }
+        
+        // Handle Signup
+        async function handleSignup(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const errorDiv = document.getElementById('signupError');
+            
+            if (password !== confirmPassword) {
+                errorDiv.innerHTML = '<div class="error-message">Passwords do not match</div>';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/auth/signup`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name, email, password })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('token', data.access_token);
+                    localStorage.setItem('user', JSON.stringify({ name, email }));
+                    showDashboard();
+                } else {
+                    const error = await response.json();
+                    errorDiv.innerHTML = `<div class="error-message">${error.detail || 'Signup failed'}</div>`;
+                }
+            } catch (error) {
+                errorDiv.innerHTML = `<div class="error-message">Network error: ${error.message}</div>`;
+            }
+        }
+        
+        // Handle Login
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const errorDiv = document.getElementById('loginError');
+            
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('token', data.access_token);
+                    localStorage.setItem('user', JSON.stringify({ email, name: data.user.name }));
+                    showDashboard();
+                } else {
+                    const error = await response.json();
+                    errorDiv.innerHTML = `<div class="error-message">${error.detail || 'Login failed'}</div>`;
+                }
+            } catch (error) {
+                errorDiv.innerHTML = `<div class="error-message">Network error: ${error.message}</div>`;
+            }
+        }
+        
+        // Show Dashboard
+        function showDashboard() {
+            const authContainer = document.querySelector('.auth-container');
+            const dashboard = document.getElementById('dashboard');
+            const user = JSON.parse(localStorage.getItem('user'));
+            
+            document.getElementById('userEmail').textContent = user.email;
+            document.getElementById('userName').textContent = user.name;
+            
+            authContainer.style.display = 'none';
+            dashboard.classList.add('active');
+        }
+        
+        // Handle Logout
+        function handleLogout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            location.reload();
+        }
+        
+        // Check if user is already logged in
+        window.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            if (token) {
+                showDashboard();
+            }
+        });
+    </script>
+</body>
+</html>
